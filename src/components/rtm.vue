@@ -10,15 +10,15 @@
                     <option v-for="item in userList" :value="item.value" :disabled="item.value === login.uid" :key="item.value">{{item.name}}</option>
                 </select>
             </div>
-            <div class="msgBox">
-                <div :class="['message', {selfMsg: item.type === 'self'}]" v-for="item in msgList" :key="item.message" >
+            <div class="msgBox" ref="msgWrap">
+                <div :class="['message', {selfMsg: item.type === 'self'}]" v-for="(item, index) in msgList" :key="item.peerId + index" >
                     <img :class="['head', {selfHead: item.type === 'self'}]" v-if="item.peerId !== 'XX'" src="../assets/pig.jpg" >
                     <img :class="['head', {selfHead: item.type === 'self'}]" v-else src="../assets/self.jpg" >
                     <div :class="['text', {selfText: item.type === 'self'}]">{{item.message}}</div>
                 </div>
             </div>
-            <textarea class="textInput" resize="none" v-model="msg" @keyup.enter="sendMsg"></textarea>
-            <button class="btn" @click="sendMsg">发送(enter)</button>
+            <textarea class="textInput" resize="none" v-model="msg" @keydown.native="sendMsg"></textarea>
+            <button class="btn" :disabled="msg === ''" @click="sendMsg">发送(enter)</button>
         </div>
     </div>
 </template>
@@ -67,7 +67,16 @@ export default {
                 this.join();
             }
         },
+        onKeyDown(e) {
+            console.log(e);
+            this.sendMsg();
+        },
         sendMsg() {
+            if(this.msg === ''){
+                console.log('msg', `Q${this.msg}Q`);
+                return;
+            }
+                console.log('out msg', `Q${this.msg}Q`);
             const msg = this.msg;
             this.msg = '';
             this.client.sendMessageToPeer({ text: msg }, this.sendId).then(res => {
@@ -77,9 +86,9 @@ export default {
                         message: msg,
                         peerId: this.login.uid,
                     });
+                    this.$refs.msgWrap.scrollTop = this.$refs.msgWrap.scrollHeight;
                 }
             });
-            
         },
         // sendAlert() {
         //     this.client.sendMessageToPeer({
@@ -105,6 +114,7 @@ export default {
                     message: text,
                     peerId,
                 });
+                this.$refs.msgWrap.scrollTop = this.$refs.msgWrap.scrollHeight + 20;
                 // const { text } = msgObj;
                 // const msg = JSON.parse(text);
                 // if(msg.type === 'action') {
